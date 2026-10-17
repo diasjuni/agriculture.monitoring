@@ -1,5 +1,9 @@
 // Data State
 let weedZones = [];
+let weedZoneCounter = 0;
+let tankReadings = {};
+const SPRAY_ESTIMATE_MINUTES = 4.5;
+const CONVENTIONAL_FIELD_AREA_M2 = 240;
 
 // DOM Elements for SPA
 const viewDashboard = document.getElementById("view-dashboard");
@@ -35,6 +39,8 @@ function showView(viewEl) {
 // Navigasi menu sederhana & SPA
 document.querySelectorAll(".nav-item").forEach(item => {
   item.addEventListener("click", event => {
+    if (item.target === "_blank") return;
+
     event.preventDefault();
     document.querySelectorAll(".nav-item").forEach(nav => nav.classList.remove("active"));
     item.classList.add("active");
@@ -76,23 +82,29 @@ fileInput.addEventListener("change", () => {
         if (file.name.endsWith('.json')) {
           const data = JSON.parse(e.target.result);
           if (Array.isArray(data)) {
-            data.forEach(item => processZone(item.x, item.y, item.area, item.density));
-            alert(`Berhasil import ${data.length} zona dari JSON.`);
+            const newIds = [];
+            data.forEach(item => {
+              const id = processZone(item.x, item.y, item.area, item.density, true);
+              if (id) newIds.push(id);
+            });
+            runAllocation(newIds); // alokasi sekali setelah semua zona masuk
+            alert(`Berhasil import ${newIds.length} zona dari JSON.`);
             goToZonaGulmaView();
           }
         } else if (file.name.endsWith('.csv')) {
           const lines = e.target.result.split('\n');
-          let count = 0;
+          const newIds = [];
           for (let i = 1; i < lines.length; i++) {
             const line = lines[i].trim();
             if (!line) continue;
             const cols = line.split(',');
             if (cols.length >= 4) {
-              processZone(cols[0], cols[1], cols[2], cols[3]);
-              count++;
+              const id = processZone(cols[0], cols[1], cols[2], cols[3], true);
+              if (id) newIds.push(id);
             }
           }
-          alert(`Berhasil import ${count} zona dari CSV.`);
+          runAllocation(newIds);
+          alert(`Berhasil import ${newIds.length} zona dari CSV.`);
           goToZonaGulmaView();
         }
       } catch (err) {
@@ -115,7 +127,11 @@ document.getElementById("addZoneBtn").addEventListener("click", () => {
     return;
   }
 
-  processZone(x, y, area, density);
+  const id = processZone(x, y, area, density);
+  if (!id) {
+    alert("Nilai X, Y, Area, dan Density harus berupa angka.");
+    return;
+  }
 
   document.getElementById("xInput").value = '';
   document.getElementById("yInput").value = '';
@@ -126,17 +142,31 @@ document.getElementById("addZoneBtn").addEventListener("click", () => {
 });
 
 // Process Zone Calculation
-function processZone(x, y, area, density) {
-  const severityScore = parseFloat(area) * parseFloat(density);
+// skipAllocate = true dipakai saat import banyak zona (alokasi dijalankan sekali di akhir)
+function processZone(x, y, area, density, skipAllocate = false) {
+  const px = parseFloat(x);
+  const py = parseFloat(y);
+  const pa = parseFloat(area);
+  const pd = parseFloat(density);
+  if ([px, py, pa, pd].some(isNaN)) return null;
+
+  const severityScore = pa * pd;
+  const id = ++weedZoneCounter;
   weedZones.push({
-    x: parseFloat(x),
-    y: parseFloat(y),
-    area: parseFloat(area),
-    density: parseFloat(density),
+    id,
+    x: px,
+    y: py,
+    area: pa,
+    density: pd,
     score: severityScore
   });
+  renderDashboardSummary();
+  renderDashboardCharts();
 
-  logActivity('zona-gulma', `Zona baru dicatat di (${x}, ${y}) — area ${area}m², density ${density}t, skor prioritas ${severityScore.toFixed(2)}.`);
+  logActivity('zona-gulma', `Zona baru dicatat di (${px}, ${py}) — area ${pa}m², density ${pd}t, skor prioritas ${severityScore.toFixed(2)}.`);
+
+  if (!skipAllocate) runAllocation([id]);
+  return id;
 }
 
 // Menavigasi ke Zona Gulma & Render
@@ -154,6 +184,7 @@ function renderZonaGulma() {
 
   if (weedZones.length === 0) {
     tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Belum ada area zona gulma yang tercatat. Import CSV/JSON atau tambahkan manual.</td></tr>`;
+    refreshExportButtons();
     return;
   }
 
@@ -180,12 +211,25 @@ function renderZonaGulma() {
       </tr>
     `;
   }).join('');
+  refreshExportButtons();
 }
 
 // ========================
 // Status Node Toggle Logic
 // ========================
+function renderDashboardNodeStatus(nodeId, isActive) {
+  const dashStatus = document.getElementById(`node-${nodeId}-status`);
+  const dashCard = document.getElementById(`node-${nodeId}-card`);
+  const dashIcon = dashCard ? dashCard.querySelector('.node-header h3 i') : null;
+  if (!dashStatus) return;
+
+  dashStatus.textContent = isActive ? '● AKTIF' : '● MATI';
+  dashStatus.className = `status node-status-badge ${isActive ? 'online' : 'offline'}`;
+  if (dashIcon) dashIcon.className = `node-status-dot ${isActive ? 'online' : 'offline'}`;
+}
+
 document.querySelectorAll('input[data-sn-node]').forEach(checkbox => {
+  renderDashboardNodeStatus(checkbox.getAttribute('data-sn-node'), checkbox.checked);
   checkbox.addEventListener('change', () => {
     const nodeId = checkbox.getAttribute('data-sn-node');
     const card = document.getElementById(`sn-node-${nodeId}`);
@@ -197,10 +241,6 @@ document.querySelectorAll('input[data-sn-node]').forEach(checkbox => {
     const conn = document.getElementById(`sn-conn-${nodeId}`);
 
     // Also update dashboard node cards
-    const dashStatus = document.getElementById(`node-${nodeId}-status`);
-    const dashCard = document.getElementById(`node-${nodeId}-card`);
-    const dashIcon = dashCard ? dashCard.querySelector('.node-header h3 i') : null;
-
     if (checkbox.checked) {
       // ON
       card.classList.remove('off');
@@ -213,13 +253,7 @@ document.querySelectorAll('input[data-sn-node]').forEach(checkbox => {
       servo.textContent = 'Ready';
       conn.textContent = 'Terhubung';
 
-      if (dashStatus) {
-        dashStatus.textContent = '● SIAP BEROPERASI';
-        dashStatus.style.background = '';
-        dashStatus.style.color = '';
-      }
-      if (dashCard) dashCard.style.opacity = '1';
-      if (dashIcon) dashIcon.style.background = '#10bb54';
+      renderDashboardNodeStatus(nodeId, true);
 
       logActivity('status-node', `Node ${nodeId} dinyalakan — hardware aktif & siap beroperasi.`);
     } else {
@@ -234,48 +268,9 @@ document.querySelectorAll('input[data-sn-node]').forEach(checkbox => {
       servo.textContent = 'Standby';
       conn.textContent = 'Terputus';
 
-      if (dashStatus) {
-        dashStatus.textContent = '○ HARDWARE MATI';
-        dashStatus.style.background = '#f0f0f0';
-        dashStatus.style.color = '#777';
-      }
-      if (dashCard) dashCard.style.opacity = '0.6';
-      if (dashIcon) dashIcon.style.background = '#777';
+      renderDashboardNodeStatus(nodeId, false);
 
       logActivity('status-node', `Node ${nodeId} dimatikan — hardware nonaktif.`);
-    }
-  });
-});
-
-// ========================
-// Dashboard Node Toggle Buttons (existing)
-// ========================
-document.querySelectorAll('.node-toggle-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const nodeId = btn.getAttribute('data-node');
-    const statusEl = document.getElementById(`node-${nodeId}-status`);
-    const cardEl = document.getElementById(`node-${nodeId}-card`);
-    const iconEl = cardEl ? cardEl.querySelector('.node-header h3 i') : null;
-
-    // Sync with Status Node page toggle
-    const snCheckbox = document.querySelector(`input[data-sn-node="${nodeId}"]`);
-
-    if (btn.textContent.trim() === 'Matikan Hardware') {
-      btn.textContent = 'Nyalakan Hardware';
-      btn.style.background = '#eaf9f0';
-      btn.style.color = '#0c9d43';
-      if (statusEl) { statusEl.textContent = '○ HARDWARE MATI'; statusEl.style.background = '#f0f0f0'; statusEl.style.color = '#777'; }
-      if (iconEl) iconEl.style.background = '#777';
-      if (cardEl) cardEl.style.opacity = '0.6';
-      if (snCheckbox) { snCheckbox.checked = false; snCheckbox.dispatchEvent(new Event('change')); }
-    } else {
-      btn.textContent = 'Matikan Hardware';
-      btn.style.background = '#fee';
-      btn.style.color = '#d12e2e';
-      if (statusEl) { statusEl.textContent = '● SIAP BEROPERASI'; statusEl.style.background = ''; statusEl.style.color = ''; }
-      if (iconEl) iconEl.style.background = '#10bb54';
-      if (cardEl) cardEl.style.opacity = '1';
-      if (snCheckbox) { snCheckbox.checked = true; snCheckbox.dispatchEvent(new Event('change')); }
     }
   });
 });
@@ -298,6 +293,209 @@ let nodePositions = {
   A: { current: null, previous: null },
   B: { current: null, previous: null }
 };
+
+function renderDashboardCharts() {
+  renderDashboardWeedChart();
+  renderDashboardPositionChart();
+  renderDashboardTankChart();
+  refreshExportButtons();
+}
+
+function renderDashboardSummary() {
+  const priorityValue = document.getElementById('dashboard-priority-value');
+  const priorityCaption = document.getElementById('dashboard-priority-caption');
+  const sprayTime = document.getElementById('dashboard-spray-time');
+  const sprayCaption = document.getElementById('dashboard-spray-caption');
+  const herbicideSavings = document.getElementById('dashboard-herbicide-savings');
+  const herbicideCaption = document.getElementById('dashboard-herbicide-caption');
+  const herbicideDetail = document.getElementById('dashboard-herbicide-detail');
+  if (!priorityValue || !priorityCaption || !sprayTime || !sprayCaption
+    || !herbicideSavings || !herbicideCaption || !herbicideDetail) return;
+
+  if (weedZones.length === 0) {
+    priorityValue.textContent = '—';
+    priorityCaption.textContent = 'Belum ada zona terdeteksi';
+    sprayTime.textContent = '—';
+    sprayCaption.textContent = 'Belum ada zona terdeteksi';
+    herbicideSavings.textContent = '—';
+    herbicideCaption.textContent = 'Menunggu hasil pemindaian';
+    herbicideDetail.textContent = `Baseline lahan: ${CONVENTIONAL_FIELD_AREA_M2} m²`;
+    return;
+  }
+
+  const topZone = weedZones.reduce((highest, zone) => zone.score > highest.score ? zone : highest);
+  const detectedArea = weedZones.reduce((total, zone) => total + Math.max(0, zone.area), 0);
+  const targetedArea = Math.min(detectedArea, CONVENTIONAL_FIELD_AREA_M2);
+  const savingsPercent = Math.round(
+    ((CONVENTIONAL_FIELD_AREA_M2 - targetedArea) / CONVENTIONAL_FIELD_AREA_M2) * 100
+  );
+
+  priorityValue.textContent = `Skor ${topZone.score.toFixed(1)}`;
+  priorityCaption.textContent = `Zona ${topZone.id}`;
+  sprayTime.textContent = `${SPRAY_ESTIMATE_MINUTES.toFixed(1)} Menit`;
+  sprayCaption.textContent = `Untuk ${weedZones.length} zona terdeteksi`;
+  herbicideSavings.textContent = `${savingsPercent}%`;
+  herbicideCaption.textContent = 'Dibandingkan spraying konvensional';
+  herbicideDetail.textContent =
+    `Zona terdeteksi: ${targetedArea.toFixed(1)} m² dari ${CONVENTIONAL_FIELD_AREA_M2} m²`;
+}
+
+function renderDashboardWeedChart() {
+  const chart = document.getElementById('dashboard-weed-chart');
+  if (!chart) return;
+  if (weedZones.length === 0) {
+    chart.innerHTML = '<p class="chart-empty">Belum ada zona gulma yang diproses.</p>';
+    return;
+  }
+
+  const zones = [...weedZones].sort((a, b) => b.score - a.score).slice(0, 6);
+  const scales = {
+    area: Math.max(...zones.map(zone => zone.area), 1),
+    density: Math.max(...zones.map(zone => zone.density), 1),
+    score: Math.max(...zones.map(zone => zone.score), 1)
+  };
+  const metrics = [
+    { key: 'area', label: 'Luas (m²)' },
+    { key: 'density', label: 'Kepadatan (t)' },
+    { key: 'score', label: 'Skor Prioritas' }
+  ];
+  const plot = { left: 43, right: 484, top: 13, bottom: 184 };
+  const groupWidth = (plot.right - plot.left) / zones.length;
+  const barWidth = Math.min(14, groupWidth * 0.19);
+  const barGap = Math.min(4, groupWidth * 0.055);
+  const clusterWidth = metrics.length * barWidth + (metrics.length - 1) * barGap;
+  const grid = Array.from({ length: 5 }, (_, index) => {
+    const value = 100 - index * 25;
+    const y = plot.top + (index / 4) * (plot.bottom - plot.top);
+    return `<line class="weed-chart-grid" x1="${plot.left}" y1="${y}" x2="${plot.right}" y2="${y}" />
+      <text class="weed-chart-axis-label" x="${plot.left - 7}" y="${y + 3}" text-anchor="end">${value}</text>`;
+  }).join('');
+  const bars = zones.map((zone, index) => {
+    const center = plot.left + groupWidth * (index + 0.5);
+    const groupStart = center - clusterWidth / 2;
+    const metricBars = metrics.map((metric, metricIndex) => {
+      const value = zone[metric.key];
+      const normalizedValue = Math.max(0, Math.min(100, (value / scales[metric.key]) * 100));
+      const height = (normalizedValue / 100) * (plot.bottom - plot.top);
+      const x = groupStart + metricIndex * (barWidth + barGap);
+      const y = plot.bottom - height;
+      const actualValue = metric.key === 'area'
+        ? `${value} m²`
+        : metric.key === 'density'
+          ? `${value} t`
+          : value.toFixed(2);
+      return `<rect class="weed-chart-bar weed-series-${metric.key}" x="${x}" y="${y}" width="${barWidth}" height="${height}">
+        <title>Zona ${zone.id} (${zone.x}, ${zone.y}) · ${metric.label}: ${actualValue}</title>
+      </rect>`;
+    }).join('');
+    return `${metricBars}
+      <text class="weed-chart-category" x="${center}" y="${plot.bottom + 17}" text-anchor="middle">Zona ${zone.id}</text>`;
+  }).join('');
+
+  chart.innerHTML = `
+    <div class="weed-chart-legend" aria-label="Legenda grafik">
+      ${metrics.map(metric => `<span><i class="weed-series-${metric.key}"></i>${metric.label}</span>`).join('')}
+    </div>
+    <svg class="weed-column-chart" viewBox="0 0 500 218" role="img" aria-label="Grafik batang vertikal hasil pemindaian zona gulma">
+      ${grid}
+      <line class="weed-chart-axis" x1="${plot.left}" y1="${plot.bottom}" x2="${plot.right}" y2="${plot.bottom}" />
+      ${bars}
+    </svg>
+    <p class="weed-chart-note">Skala relatif per indikator (0–100%); arahkan kursor ke batang untuk melihat nilai aktual.</p>`;
+}
+
+function renderDashboardPositionChart() {
+  const chart = document.getElementById('dashboard-position-chart');
+  if (!chart) return;
+
+  const nodes = ['A', 'B']
+    .map(id => ({ id, ...nodePositions[id] }))
+    .filter(node => node.current);
+  if (nodes.length === 0) {
+    chart.innerHTML = '<p class="chart-empty">Belum ada data posisi node.</p>';
+    return;
+  }
+
+  const allPositions = nodes.flatMap(node =>
+    node.previous ? [node.previous, node.current] : [node.current]
+  );
+  const minX = Math.min(...allPositions.map(point => point.x));
+  const maxX = Math.max(...allPositions.map(point => point.x));
+  const minY = Math.min(...allPositions.map(point => point.y));
+  const maxY = Math.max(...allPositions.map(point => point.y));
+  const xPadding = Math.max((maxX - minX) * 0.15, 1);
+  const yPadding = Math.max((maxY - minY) * 0.15, 1);
+  const xStart = minX - xPadding;
+  const xRange = maxX - minX + xPadding * 2;
+  const yStart = minY - yPadding;
+  const yRange = maxY - minY + yPadding * 2;
+  const plot = { left: 48, right: 476, top: 20, bottom: 188 };
+  const xScale = value => plot.left + ((value - xStart) / xRange) * (plot.right - plot.left);
+  const yScale = value => plot.bottom - ((value - yStart) / yRange) * (plot.bottom - plot.top);
+  const grid = Array.from({ length: 5 }, (_, index) => {
+    const fraction = index / 4;
+    const y = plot.top + fraction * (plot.bottom - plot.top);
+    const value = maxY + yPadding - fraction * yRange;
+    return `<line class="position-grid-line" x1="${plot.left}" y1="${y}" x2="${plot.right}" y2="${y}" />
+      <text class="position-axis-label" x="${plot.left - 8}" y="${y + 4}" text-anchor="end">${value.toFixed(1)}</text>`;
+  }).join('');
+  const guides = Array.from({ length: 5 }, (_, index) => {
+    const fraction = index / 4;
+    const x = plot.left + fraction * (plot.right - plot.left);
+    const value = xStart + fraction * xRange;
+    return `<line class="position-grid-line vertical" x1="${x}" y1="${plot.top}" x2="${x}" y2="${plot.bottom}" />
+      <text class="position-axis-label" x="${x}" y="${plot.bottom + 18}" text-anchor="middle">${value.toFixed(1)}</text>`;
+  }).join('');
+  const marks = nodes.map(node => {
+    const currentX = xScale(node.current.x);
+    const currentY = yScale(node.current.y);
+    const previousMark = node.previous
+      ? `<line class="position-trail node-${node.id.toLowerCase()}" x1="${xScale(node.previous.x)}" y1="${yScale(node.previous.y)}" x2="${currentX}" y2="${currentY}" />
+         <circle class="position-previous node-${node.id.toLowerCase()}" cx="${xScale(node.previous.x)}" cy="${yScale(node.previous.y)}" r="4" />`
+      : '';
+    return `${previousMark}
+      <circle class="position-point node-${node.id.toLowerCase()}" cx="${currentX}" cy="${currentY}" r="7" />
+      <text class="position-point-label" x="${currentX + 10}" y="${currentY - 10}">Node ${node.id}</text>`;
+  }).join('');
+
+  chart.innerHTML = `
+    <svg class="position-chart" viewBox="0 0 500 228" role="img" aria-label="Grafik koordinat posisi node">
+      ${grid}${guides}
+      <text class="position-axis-title" x="262" y="224" text-anchor="middle">Koordinat X</text>
+      <text class="position-axis-title" x="12" y="105" text-anchor="middle" transform="rotate(-90 12 105)">Koordinat Y</text>
+      ${marks}
+    </svg>
+    <div class="position-legend">
+      ${nodes.map(node => `<span><i class="node-${node.id.toLowerCase()}"></i>Node ${node.id}: (${node.current.x}, ${node.current.y})</span>`).join('')}
+    </div>`;
+}
+
+function renderDashboardTankChart() {
+  const chart = document.getElementById('dashboard-tank-chart');
+  if (!chart) return;
+  if (Object.keys(tankReadings).length === 0) {
+    chart.innerHTML = '<p class="chart-empty">Belum ada kalkulasi volume tangki.</p>';
+    return;
+  }
+
+  chart.innerHTML = `<div class="tank-gauges">${['1', '2'].map(nodeId => {
+    const reading = tankReadings[nodeId];
+    if (!reading) {
+      return `<div class="tank-gauge-item">
+        <div class="tank-gauge unavailable"><span>—</span></div>
+        <strong>Node ${nodeId}</strong>
+        <small>Belum ada data</small>
+      </div>`;
+    }
+    return `<div class="tank-gauge-item">
+      <div class="tank-gauge" style="--tank-value:${reading.percent}%">
+        <span>${reading.percent.toFixed(0)}<small>%</small></span>
+      </div>
+      <strong>Node ${nodeId}</strong>
+      <small>${reading.volumeLiter.toFixed(1)} L dari ${reading.capacity} L</small>
+    </div>`;
+  }).join('')}</div>`;
+}
 
 // 1. TERIMA INPUT — memasukkan posisi baru, beda alur untuk Node A dan Node B
 function setNodePosition(nodeId, x, y) {
@@ -323,6 +521,12 @@ function setNodePosition(nodeId, x, y) {
     logActivity('posisi-node', `Node ${nodeId} mengirim posisi awal (${posX}, ${posY}) — menunggu data pembanding.`);
   } else {
     logActivity('posisi-node', `Node ${nodeId} pindah ke (${posX}, ${posY}) — pergeseran ${stability.distance.toFixed(2)}m, ${stability.isValid ? 'stabil' : 'belum stabil'}.`);
+  }
+
+  // Posisi node berubah → alokasi Greedy perlu dihitung ulang
+  if (weedZones.length > 0) {
+    lbLog(`Posisi Node ${nodeId} berubah → alokasi dihitung ulang`);
+    runAllocation();
   }
 }
 
@@ -369,6 +573,9 @@ function renderNodePositionStatus(nodeId, stability) {
     statusEl.textContent = '✗ Belum Stabil';
     statusEl.className = 'pn-badge invalid';
   }
+
+  renderDashboardCharts();
+  renderDashboardSummary();
 }
 
 // Tombol submit — Node A dan Node B punya alur/listener masing-masing (independen)
@@ -378,6 +585,156 @@ document.getElementById('pnA-submit').addEventListener('click', () => {
 document.getElementById('pnB-submit').addEventListener('click', () => {
   setNodePosition('B', document.getElementById('pnB-x').value, document.getElementById('pnB-y').value);
 });
+
+// ========================
+// Load Balancing — Greedy per Node + μb, σb, CVb + Rebalancing
+// ========================
+// Alur:
+// Zona gulma → Greedy (skor tertinggi dulu, ke node terdekat) → jumlah tugas per node
+// → μb, σb, CVb → badge BALANCED/UNBALANCED → rebalancing jika CVb > threshold → System Log
+
+const CV_THRESHOLD = 0.2;        // CVb di atas ini = UNBALANCED
+const MAX_MOVE_DISTANCE = 100;   // jarak maksimum zona boleh dipindah saat rebalancing (satuan koordinat)
+
+// Posisi bawaan node jika belum diinput di halaman Posisi Node
+const DEFAULT_NODE_POS = {
+  A: { x: 0, y: 0 },
+  B: { x: 100, y: 0 }
+};
+
+const lbNodes = [
+  { id: 'A', tasks: [] },
+  { id: 'B', tasks: [] }
+];
+
+const lbDist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+// Posisi node: pakai posisi dari halaman Posisi Node kalau sudah ada
+function lbNodePos(node) {
+  return nodePositions[node.id].current || DEFAULT_NODE_POS[node.id];
+}
+
+// ---- System Log (panel Load Balancing) ----
+function lbLog(msg, type = '') {
+  const box = document.getElementById('system-log');
+  if (!box) return;
+  const time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const row = document.createElement('div');
+  row.className = `log-row ${type}`.trim();
+  row.textContent = `[${time}] ${msg}`;
+  box.appendChild(row);
+  while (box.children.length > 100) box.removeChild(box.firstChild);
+  box.scrollTop = box.scrollHeight;
+}
+
+// ---- 1) Greedy: zona skor tertinggi dulu, ke node terdekat ----
+function allocateGreedy() {
+  lbNodes.forEach(n => (n.tasks = []));
+  [...weedZones]
+    .sort((a, b) => b.score - a.score)
+    .forEach(z => {
+      const nearest = lbNodes.reduce((best, n) =>
+        lbDist(lbNodePos(n), z) < lbDist(lbNodePos(best), z) ? n : best
+      );
+      nearest.tasks.push(z);
+    });
+}
+
+// ---- 2) Metrik μb, σb, CVb ----
+function computeMetrics() {
+  const counts = lbNodes.map(n => n.tasks.length);
+  const mu = counts.reduce((s, c) => s + c, 0) / counts.length;
+  const sigma = Math.sqrt(counts.reduce((s, c) => s + (c - mu) ** 2, 0) / counts.length);
+  const cv = mu === 0 ? 0 : sigma / mu;
+  return { counts, mu, sigma, cv };
+}
+
+// ---- 3) Rebalancing: pindahkan zona dari node berat ke node ringan ----
+function rebalance() {
+  let guard = 50;
+  while (computeMetrics().cv > CV_THRESHOLD && guard--) {
+    const sorted = [...lbNodes].sort((a, b) => b.tasks.length - a.tasks.length);
+    const heavy = sorted[0];
+    const light = sorted[sorted.length - 1];
+    if (heavy.tasks.length - light.tasks.length < 2) break;
+
+    // zona di node berat yang paling dekat ke node ringan
+    const candidate = heavy.tasks
+      .map(z => ({ z, d: lbDist(lbNodePos(light), z) }))
+      .sort((a, b) => a.d - b.d)[0];
+
+    if (!candidate || candidate.d > MAX_MOVE_DISTANCE) {
+      lbLog(`Rebalancing dihentikan: Zona ${candidate?.z.id} terlalu jauh (${candidate?.d.toFixed(0)})`, 'warn');
+      break;
+    }
+
+    heavy.tasks = heavy.tasks.filter(z => z !== candidate.z);
+    light.tasks.push(candidate.z);
+    lbLog(`Rebalancing: Zona ${candidate.z.id} dipindah Node ${heavy.id} → Node ${light.id}`, 'action');
+    logActivity('zona-gulma', `Rebalancing: Zona (${candidate.z.x}, ${candidate.z.y}) dipindah dari Node ${heavy.id} ke Node ${light.id}.`);
+  }
+}
+
+// ---- 4) Render panel μb, σb, CVb + badge ----
+function renderLbMetrics(writeLog = true) {
+  const { counts, mu, sigma, cv } = computeMetrics();
+
+  const muEl = document.getElementById('mu-value');
+  const sigmaEl = document.getElementById('sigma-value');
+  const cvEl = document.getElementById('cv-value');
+  const badge = document.getElementById('balance-badge');
+
+  if (muEl) muEl.textContent = mu.toFixed(2);
+  if (sigmaEl) sigmaEl.textContent = sigma.toFixed(2);
+  if (cvEl) cvEl.textContent = cv.toFixed(2);
+
+  const balanced = cv <= CV_THRESHOLD;
+  if (badge) {
+    badge.textContent = balanced ? 'BALANCED' : 'UNBALANCED';
+    badge.className = balanced ? 'balanced' : 'unbalanced';
+  }
+
+  if (writeLog) {
+    lbLog(
+      `Beban: Node A = ${counts[0]}, Node B = ${counts[1]} | μb=${mu.toFixed(2)} σb=${sigma.toFixed(2)} CVb=${cv.toFixed(2)}`,
+      balanced ? 'ok' : 'warn'
+    );
+  }
+}
+
+// ---- Alur utama: dipanggil tiap ada zona baru / posisi node berubah ----
+function runAllocation(newIds = []) {
+  allocateGreedy();
+
+  newIds.forEach(id => {
+    const owner = lbNodes.find(n => n.tasks.some(z => z.id === id));
+    if (owner) lbLog(`Greedy: Zona ${id} → Node ${owner.id}`);
+  });
+
+  const m = computeMetrics();
+  if (m.cv > CV_THRESHOLD) {
+    lbLog(`CVb ${m.cv.toFixed(2)} > ${CV_THRESHOLD} → UNBALANCED, rebalancing dipicu`, 'warn');
+    rebalance();
+  }
+  renderLbMetrics();
+}
+
+// Tombol tes opsional (kalau ada <button id="btn-add-zone"> di HTML)
+const btnAddRandomZone = document.getElementById('btn-add-zone');
+if (btnAddRandomZone) {
+  btnAddRandomZone.addEventListener('click', () => {
+    processZone(
+      (Math.random() * 100).toFixed(1),
+      (Math.random() * 100).toFixed(1),
+      (1 + Math.random() * 9).toFixed(1),
+      (Math.random() * 10).toFixed(1)
+    );
+    renderZonaGulma();
+  });
+}
+
+// Tampilkan nilai awal panel (0.00 + BALANCED)
+renderLbMetrics(false);
 
 // ========================
 // Volume Tangki — Kalibrasi Sensor Ultrasonik ke Volume/Persen
@@ -411,7 +768,10 @@ function calculateTankVolume(nodeId) {
   const volumeLiter = (percent / 100) * capacity;    // volume dalam liter
 
   // 3. Tampilkan hasil ke UI
-  renderTankStatus(nodeId, { distance, height, percent, volumeLiter });
+  const reading = { distance, height, capacity, percent, volumeLiter };
+  renderTankStatus(nodeId, reading);
+  tankReadings[nodeId] = reading;
+  renderDashboardCharts();
 
   logActivity('volume-tangki', `Tangki Node ${nodeId} dihitung — jarak sensor ${distance}cm → ${percent.toFixed(0)}% (${volumeLiter.toFixed(0)}L) sisa cairan.`);
 }
@@ -432,17 +792,471 @@ function renderTankStatus(nodeId, data) {
     statusEl.textContent = '✓ Cairan Cukup';
     statusEl.className = 'pn-badge valid';
   }
-
-  // Sinkronkan juga ke tank di halaman Dashboard (opsional, biar konsisten)
-  const dashBar = document.querySelector(`#node-${nodeId}-card .progress span`);
-  const dashLabel = document.querySelector(`#node-${nodeId}-card .tank-title strong`);
-  if (dashBar) dashBar.style.width = `${data.percent.toFixed(0)}%`;
-  if (dashLabel) dashLabel.textContent = `${data.percent.toFixed(0)}% (${data.volumeLiter.toFixed(0)}L)`;
 }
 
 // Tombol kalkulasi — tiap node independen
 document.getElementById('vt-submit-1').addEventListener('click', () => calculateTankVolume('1'));
 document.getElementById('vt-submit-2').addEventListener('click', () => calculateTankVolume('2'));
+
+// ========================
+// Export Hasil Data
+// ========================
+function getWeedExportRows() {
+  return [...weedZones]
+    .sort((a, b) => b.score - a.score)
+    .map((zone, index) => [
+      index + 1,
+      `(${zone.x}, ${zone.y})`,
+      zone.area,
+      zone.density,
+      zone.score.toFixed(2),
+      index === 0 ? 'Prioritas Tinggi' : zone.score > 50 ? 'Urgent' : 'Normal'
+    ]);
+}
+
+function getPositionExportRows() {
+  return ['A', 'B']
+    .filter(nodeId => nodePositions[nodeId].current)
+    .map(nodeId => {
+      const { current, previous } = nodePositions[nodeId];
+      const stability = checkStability(nodeId);
+      const status = stability.distance === null
+        ? 'Menunggu data pembanding'
+        : stability.isValid
+          ? 'Stabil'
+          : 'Belum stabil';
+      return [
+        `Node ${nodeId}`,
+        current.x,
+        current.y,
+        previous ? previous.x : 'Belum ada',
+        previous ? previous.y : 'Belum ada',
+        stability.distance === null ? 'Belum tersedia' : `${stability.distance.toFixed(2)} m`,
+        status
+      ];
+    });
+}
+
+function getTankExportRows() {
+  return ['1', '2']
+    .filter(nodeId => tankReadings[nodeId])
+    .map(nodeId => {
+      const reading = tankReadings[nodeId];
+      return [
+        `Node ${nodeId}`,
+        reading.height,
+        reading.capacity,
+        reading.distance,
+        reading.percent.toFixed(1),
+        reading.volumeLiter.toFixed(2),
+        reading.percent <= REFILL_THRESHOLD_PERCENT ? 'Perlu isi ulang' : 'Cairan cukup'
+      ];
+    });
+}
+
+function getDashboardExportSections() {
+  const dashboardText = id => document.getElementById(id)?.textContent.trim() || '—';
+  const chartCards = [...document.querySelectorAll('#view-dashboard .chart-card')];
+  const chartRows = chartCards.map(card => [
+    card.querySelector('h3')?.textContent.trim() || 'Diagram',
+    card.querySelector('.chart-eyebrow')?.textContent.trim() || '',
+    card.querySelector('.chart-description')?.textContent.trim() || '',
+    card.querySelector('.chart-content')?.textContent.replace(/\s+/g, ' ').trim() || 'Belum ada data'
+  ]);
+  const positionRows = getPositionExportRows();
+  const tankRows = getTankExportRows();
+
+  return [
+    {
+      title: 'Ringkasan Dashboard',
+      columns: ['Indikator', 'Nilai', 'Keterangan', 'Detail'],
+      rows: [
+        [
+          'Indeks Prioritas Utama',
+          dashboardText('dashboard-priority-value'),
+          dashboardText('dashboard-priority-caption'),
+          dashboardText('dashboard-priority-value') === '—'
+            ? 'Berdasarkan Luas × Kepadatan'
+            : 'Skor prioritas tertinggi berdasarkan Luas × Kepadatan'
+        ],
+        [
+          'Perkiraan Waktu Semprot',
+          dashboardText('dashboard-spray-time'),
+          dashboardText('dashboard-spray-caption'),
+          'Estimasi untuk seluruh zona'
+        ],
+        [
+          'Estimasi Hemat Herbisida',
+          dashboardText('dashboard-herbicide-savings'),
+          dashboardText('dashboard-herbicide-caption'),
+          dashboardText('dashboard-herbicide-detail')
+        ]
+      ]
+    },
+    {
+      title: 'Status Node',
+      columns: ['Node', 'Status'],
+      rows: ['1', '2'].map(nodeId => [
+        `Node ${nodeId}`,
+        dashboardText(`node-${nodeId}-status`)
+      ])
+    },
+    {
+      title: 'Diagram Dashboard',
+      columns: ['Diagram', 'Kategori', 'Keterangan', 'Data/Status pada diagram'],
+      rows: chartRows
+    },
+    {
+      title: 'Data Zona Gulma',
+      columns: ['Prioritas', 'Koordinat', 'Luas Area (m2)', 'Kepadatan (t)', 'Skor Prioritas', 'Status'],
+      rows: getWeedExportRows().length
+        ? getWeedExportRows()
+        : [['—', '—', '—', '—', '—', 'Belum ada zona gulma yang diproses']]
+    },
+    {
+      title: 'Data Posisi Node',
+      columns: ['Node', 'Posisi X', 'Posisi Y', 'Sebelumnya X', 'Sebelumnya Y', 'Pergeseran', 'Status'],
+      rows: positionRows.length
+        ? positionRows
+        : ['A', 'B'].map(nodeId => [
+          `Node ${nodeId}`, '—', '—', '—', '—', '—', 'Belum ada data posisi node'
+        ])
+    },
+    {
+      title: 'Data Volume Tangki',
+      columns: ['Node', 'Tinggi Tangki (cm)', 'Kapasitas (L)', 'Jarak Sensor (cm)', 'Sisa (%)', 'Volume (L)', 'Status'],
+      rows: tankRows.length
+        ? tankRows
+        : ['1', '2'].map(nodeId => [
+          `Node ${nodeId}`, '—', '—', '—', '—', '—', 'Belum ada kalkulasi volume tangki'
+        ])
+    }
+  ];
+}
+
+function getExportSections(scope) {
+  if (scope === 'dashboard') return getDashboardExportSections();
+
+  const weedRows = getWeedExportRows();
+  const positionRows = getPositionExportRows();
+  const tankRows = getTankExportRows();
+  const sections = {
+    'zona-gulma': [{
+      title: 'Data Zona Gulma',
+      columns: ['Prioritas', 'Koordinat', 'Luas Area (m2)', 'Kepadatan (t)', 'Skor Prioritas', 'Status'],
+      rows: weedRows
+    }],
+    'posisi-node': [{
+      title: 'Data Posisi Node',
+      columns: ['Node', 'Posisi X', 'Posisi Y', 'Sebelumnya X', 'Sebelumnya Y', 'Pergeseran', 'Status'],
+      rows: positionRows
+    }],
+    'volume-tangki': [{
+      title: 'Data Volume Tangki',
+      columns: ['Node', 'Tinggi Tangki (cm)', 'Kapasitas (L)', 'Jarak Sensor (cm)', 'Sisa (%)', 'Volume (L)', 'Status'],
+      rows: tankRows
+    }]
+  };
+  return sections[scope] || [];
+}
+
+function refreshExportButtons() {
+  document.querySelectorAll('[data-export-container]').forEach(container => {
+    const hasResults = container.dataset.exportContainer === 'dashboard'
+      || getExportSections(container.dataset.exportContainer)
+      .some(section => section.rows.length > 0);
+    container.hidden = !hasResults;
+  });
+}
+
+function downloadBlob(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function buildReportFileName(scope, format) {
+  const scopeName = {
+    dashboard: 'dashboard',
+    'zona-gulma': 'zona-gulma',
+    'posisi-node': 'posisi-node',
+    'volume-tangki': 'volume-tangki'
+  }[scope];
+  return `hasil-${scopeName}-${new Date().toISOString().slice(0, 10)}.${format}`;
+}
+
+function exportCsv(sections) {
+  const rows = [];
+  sections.forEach((section, index) => {
+    if (index) rows.push([]);
+    rows.push([section.title], section.columns, ...section.rows);
+  });
+  const csv = rows
+    .map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(','))
+    .join('\r\n');
+  return new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
+}
+
+async function captureDashboardCharts() {
+  const { default: html2canvas } = await import('html2canvas');
+  const cards = [...document.querySelectorAll('#view-dashboard .chart-card')];
+  const images = [];
+
+  for (const card of cards) {
+    const tankChart = card.querySelector('#dashboard-tank-chart');
+    const canvas = tankChart
+      ? captureTankChartCanvas(card, tankChart)
+      : await html2canvas(card, {
+        backgroundColor: '#ffffff',
+        logging: false,
+        scale: 2
+      });
+    images.push({
+      title: card.querySelector('h3')?.textContent.trim() || 'Diagram Dashboard',
+      data: canvas.toDataURL('image/png'),
+      width: canvas.width,
+      height: canvas.height
+    });
+  }
+
+  return images;
+}
+
+function captureTankChartCanvas(card, chart) {
+  const cardBounds = card.getBoundingClientRect();
+  const scale = 2;
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.ceil(cardBounds.width * scale);
+  canvas.height = Math.ceil(cardBounds.height * scale);
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Tidak dapat menyiapkan gambar diagram volume tangki.');
+
+  context.scale(scale, scale);
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, cardBounds.width, cardBounds.height);
+
+  const eyebrow = card.querySelector('.chart-eyebrow');
+  const title = card.querySelector('.chart-heading h3');
+  const description = card.querySelector('.chart-description');
+  const drawElementText = (element, color, fontSize, fontWeight = 400) => {
+    if (!element) return;
+    const bounds = element.getBoundingClientRect();
+    context.fillStyle = color;
+    context.font = `${fontWeight} ${fontSize}px Inter, Arial, sans-serif`;
+    context.textBaseline = 'top';
+    context.fillText(
+      element.textContent.trim(),
+      bounds.left - cardBounds.left,
+      bounds.top - cardBounds.top
+    );
+  };
+
+  drawElementText(eyebrow, '#139446', 9, 800);
+  drawElementText(title, '#173b2a', 16, 700);
+  if (description) {
+    const bounds = description.getBoundingClientRect();
+    context.fillStyle = '#718b82';
+    context.font = '400 11px Inter, Arial, sans-serif';
+    context.textBaseline = 'top';
+    context.fillText(
+      description.textContent.trim(),
+      bounds.left - cardBounds.left,
+      bounds.top - cardBounds.top,
+      bounds.width
+    );
+  }
+
+  chart.querySelectorAll('.tank-gauge-item').forEach(item => {
+    const gauge = item.querySelector('.tank-gauge');
+    const value = item.querySelector('.tank-gauge>span');
+    const nodeLabel = item.querySelector('strong');
+    const readingLabel = item.querySelector('small');
+    if (!gauge || !value) return;
+
+    const bounds = gauge.getBoundingClientRect();
+    const centerX = bounds.left - cardBounds.left + bounds.width / 2;
+    const centerY = bounds.top - cardBounds.top + bounds.height / 2;
+    const radius = Math.min(bounds.width, bounds.height) / 2 - 1;
+    const percent = Number.parseFloat(value.textContent) || 0;
+    const isUnavailable = gauge.classList.contains('unavailable');
+
+    context.beginPath();
+    context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    context.strokeStyle = isUnavailable ? '#dfe8e3' : '#e6efea';
+    context.lineWidth = 9;
+    context.stroke();
+
+    if (!isUnavailable && percent > 0) {
+      context.beginPath();
+      context.arc(centerX, centerY, radius, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * percent) / 100);
+      context.strokeStyle = '#18a653';
+      context.lineWidth = 9;
+      context.stroke();
+    }
+
+    context.fillStyle = '#123b27';
+    context.font = '800 25px Inter, Arial, sans-serif';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(value.textContent.trim(), centerX, centerY);
+    context.textAlign = 'start';
+
+    drawElementText(nodeLabel, '#244b38', 11, 700);
+    drawElementText(readingLabel, '#718b82', 9);
+  });
+
+  return canvas;
+}
+
+async function exportExcel(sections, chartImages = []) {
+  const { default: ExcelJS } = await import('exceljs');
+  const workbook = new ExcelJS.Workbook();
+  sections.forEach(section => {
+    const sheetName = section.title.replace(/[\\/?*[\]:]/g, '').slice(0, 31) || 'Data';
+    const worksheet = workbook.addWorksheet(sheetName);
+    worksheet.addRow([section.title]);
+    worksheet.addRow(section.columns);
+    section.rows.forEach(row => worksheet.addRow(row));
+  });
+  if (chartImages.length) {
+    const worksheet = workbook.addWorksheet('Dashboard Charts');
+    let row = 0;
+    chartImages.forEach(image => {
+      const imageId = workbook.addImage({ base64: image.data, extension: 'png' });
+      const width = 900;
+      const height = Math.round(width * image.height / image.width);
+      worksheet.getCell(row + 1, 1).value = image.title;
+      worksheet.addImage(imageId, {
+        tl: { col: 0, row: row + 1 },
+        ext: { width, height }
+      });
+      row += Math.ceil(height / 20) + 3;
+    });
+  }
+  return workbook.xlsx.writeBuffer();
+}
+
+async function exportWord(sections, scope, chartImages = []) {
+  const { Document, HeadingLevel, ImageRun, Packer, Paragraph } = await import('docx');
+  const paragraphs = [
+    new Paragraph({ text: `Laporan ${scope.replace(/-/g, ' ')}`, heading: HeadingLevel.TITLE }),
+    new Paragraph({ text: `Diekspor: ${new Date().toLocaleString('id-ID')}` })
+  ];
+  sections.forEach(section => {
+    paragraphs.push(new Paragraph({ text: section.title, heading: HeadingLevel.HEADING_1 }));
+    paragraphs.push(new Paragraph({ text: section.columns.join(' | ') }));
+    section.rows.forEach(row => paragraphs.push(new Paragraph({ text: row.join(' | ') })));
+  });
+  chartImages.forEach(image => {
+    const base64 = image.data.slice(image.data.indexOf(',') + 1);
+    const binary = atob(base64);
+    const imageData = Uint8Array.from(binary, character => character.charCodeAt(0));
+    const width = 600;
+    const height = Math.round(width * image.height / image.width);
+    paragraphs.push(new Paragraph({ text: image.title, heading: HeadingLevel.HEADING_1 }));
+    paragraphs.push(new Paragraph({
+      children: [new ImageRun({
+        data: imageData,
+        type: 'png',
+        transformation: { width, height }
+      })]
+    }));
+  });
+  const document = new Document({ sections: [{ children: paragraphs }] });
+  return Packer.toBlob(document);
+}
+
+async function exportPdf(sections, scope, chartImages = []) {
+  const { jsPDF } = await import('jspdf');
+  const pdf = new jsPDF();
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 14;
+  let y = 18;
+  const writeLines = (text, size, gapAfter) => {
+    pdf.setFontSize(size);
+    const lines = pdf.splitTextToSize(String(text), pageWidth - margin * 2);
+    lines.forEach(line => {
+      if (y > pageHeight - margin) {
+        pdf.addPage();
+        y = 18;
+      }
+      pdf.text(line, margin, y);
+      y += size * 0.48;
+    });
+    y += gapAfter;
+  };
+
+  writeLines(`Laporan ${scope.replace(/-/g, ' ')}`, 16, 2);
+  writeLines(`Diekspor: ${new Date().toLocaleString('id-ID')}`, 9, 5);
+  sections.forEach(section => {
+    writeLines(section.title, 13, 1);
+    section.rows.forEach((row, index) => {
+      const detail = section.columns.map((column, columnIndex) =>
+        `${column}: ${row[columnIndex]}`
+      ).join(' | ');
+      writeLines(detail, 9, 1);
+      if (index < section.rows.length - 1) y += 1;
+    });
+    y += 4;
+  });
+  chartImages.forEach(image => {
+    pdf.addPage('a4', 'landscape');
+    pdf.setFontSize(14);
+    pdf.text(image.title, margin, 17);
+    const imagePageWidth = pdf.internal.pageSize.getWidth();
+    const imagePageHeight = pdf.internal.pageSize.getHeight();
+    const availableWidth = imagePageWidth - margin * 2;
+    const availableHeight = imagePageHeight - 30;
+    const scale = Math.min(availableWidth / image.width, availableHeight / image.height);
+    const width = image.width * scale;
+    const height = image.height * scale;
+    pdf.addImage(image.data, 'PNG', (imagePageWidth - width) / 2, 23, width, height);
+  });
+  return pdf.output('blob');
+}
+
+async function handleExport(scope, format) {
+  try {
+    const sections = getExportSections(scope).filter(section => section.rows.length > 0);
+    if (!sections.length) {
+      alert('Belum ada hasil data untuk diunduh.');
+      return;
+    }
+
+    const fileName = buildReportFileName(scope, format);
+    const chartImages = scope === 'dashboard' && format !== 'csv'
+      ? await captureDashboardCharts()
+      : [];
+    if (format === 'csv') {
+      downloadBlob(exportCsv(sections), fileName);
+    } else if (format === 'xlsx') {
+      downloadBlob(new Blob([await exportExcel(sections, chartImages)], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      }), fileName);
+    } else if (format === 'docx') {
+      downloadBlob(await exportWord(sections, scope, chartImages), fileName);
+    } else if (format === 'pdf') {
+      downloadBlob(await exportPdf(sections, scope, chartImages), fileName);
+    } else {
+      throw new Error(`Format unduhan tidak dikenal: ${format}`);
+    }
+  } catch (error) {
+    console.error('Gagal mengekspor hasil data:', error);
+    alert(`Gagal membuat file unduhan: ${error.message}`);
+  }
+}
+
+document.querySelectorAll('.export-btn').forEach(button => {
+  button.addEventListener('click', () => {
+    handleExport(button.dataset.exportScope, button.dataset.exportFormat);
+  });
+});
 
 // ========================
 // Log Histori — Rekaman Realtime Semua Aktivitas
@@ -530,3 +1344,5 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
     alert("Logout berhasil.");
   }
 });
+
+renderDashboardCharts();

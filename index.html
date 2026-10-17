@@ -14,7 +14,7 @@
 <body>
   <div class="app">
 
-    <!-- SIDEBAR -->
+    <!-- ========== SIDEBAR ========== -->
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-mark">🍃</div>
@@ -28,51 +28,78 @@
 
       <nav class="nav">
         <a class="nav-item active" href="#" id="menu-dashboard">
-          <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <span class="nav-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
               <polyline points="9 22 9 12 15 12 15 22" />
-            </svg></span>
+            </svg>
+          </span>
           <span>Dashboard</span>
         </a>
+
         <a class="nav-item" href="#" id="menu-zona-gulma">
-          <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <span class="nav-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="12 2 2 7 12 12 22 7 12 2" />
               <polyline points="2 12 12 17 22 12" />
               <polyline points="2 17 12 22 22 17" />
-            </svg></span>
+            </svg>
+          </span>
           <span>Zona Gulma</span>
         </a>
+
         <a class="nav-item" href="#" id="menu-status-node">
-          <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <span class="nav-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-            </svg></span>
+            </svg>
+          </span>
           <span>Status Node</span>
         </a>
+
         <a class="nav-item" href="#" id="menu-posisi-node">
-          <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <span class="nav-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
               <circle cx="12" cy="10" r="3" />
-            </svg></span>
+            </svg>
+          </span>
           <span>Posisi Node A &amp; B</span>
         </a>
+
         <a class="nav-item" href="#" id="menu-volume-tangki">
-          <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <span class="nav-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path
                 d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />
-            </svg></span>
+            </svg>
+          </span>
           <span>Volume Tangki</span>
         </a>
+
+        <a class="nav-item" href="https://www.pens.ac.id/" id="menu-estimasi-node" target="_blank" rel="noopener noreferrer">
+          <span class="nav-icon">⌖</span>
+          <span>Estimasi Node</span>
+        </a>
+
+        <a class="nav-item" href="https://www.pens.ac.id/" id="menu-pest-classification" target="_blank" rel="noopener noreferrer">
+          <span class="nav-icon">❀</span>
+          <span>Pest Clasification</span>
+        </a>
+
         <a class="nav-item" href="#" id="menu-log-histori">
-          <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <span class="nav-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
-            </svg></span>
+            </svg>
+          </span>
           <span>Log Histori</span>
         </a>
       </nav>
@@ -85,8 +112,9 @@
       </button>
     </aside>
 
-    <!-- MAIN -->
+    <!-- ========== MAIN ========== -->
     <main class="main">
+
       <!-- TOPBAR -->
       <header class="topbar">
         <div class="search">
@@ -95,9 +123,9 @@
         </div>
 
         <div class="top-actions">
-          <button class="icon-btn" aria-label="Notifikasi">♧<i></i></button>
-          <button class="icon-btn" aria-label="Fullscreen">⛶</button>
-          <button class="profile" aria-label="Profil">
+          <button class="icon-btn" type="button" aria-label="Notifikasi">♧<i></i></button>
+          <button class="icon-btn" type="button" aria-label="Fullscreen">⛶</button>
+          <button class="profile" type="button" aria-label="Profil">
             <span class="avatar">●</span>
             <span>⌄</span>
           </button>
@@ -105,9 +133,11 @@
       </header>
 
       <section class="content">
-        <!-- DASHBOARD VIEW -->
+
+        <!-- ================= DASHBOARD ================= -->
         <div id="view-dashboard" class="view" style="display: block;">
-          <!-- HERO + METRICS -->
+
+          <!-- Hero + metrics -->
           <div class="hero-grid">
             <article class="hero-card">
               <div class="hero-overlay"></div>
@@ -124,123 +154,111 @@
               </div>
             </article>
 
-            <div class="metric-card">
-              <div class="metric-icon">🍃</div>
-              <p>Kelembapan Tanah</p>
-              <strong>2.5K <small>↑ +12%</small></strong>
-              <span>dari bulan lalu</span>
-              <div class="sparkline">⌁⌁⌁</div>
+            <div class="metric-card dashboard-summary-card">
+              <div class="metric-icon">⚑</div>
+              <p>Indeks Prioritas Utama</p>
+              <strong id="dashboard-priority-value">—</strong>
+              <span id="dashboard-priority-caption">Belum ada zona terdeteksi</span>
+              <small class="dashboard-summary-detail">Berdasarkan Luas × Kepadatan</small>
             </div>
 
-            <div class="metric-card">
-              <div class="metric-icon">♨</div>
-              <p>Suhu Tanah</p>
-              <strong>15.0°C <small>↑ +8%</small></strong>
-              <span>dari bulan lalu</span>
-              <div class="sparkline">⌁⌁⌁</div>
+            <div class="metric-card dashboard-summary-card">
+              <div class="metric-icon">◷</div>
+              <p>Perkiraan Waktu Semprot</p>
+              <strong id="dashboard-spray-time">—</strong>
+              <span id="dashboard-spray-caption">Belum ada zona terdeteksi</span>
+              <small class="dashboard-summary-detail">Estimasi untuk seluruh zona</small>
             </div>
 
-            <div class="metric-card">
-              <div class="metric-icon">🌱</div>
-              <p>Kondisi Tanaman</p>
-              <strong>8.7K <small>↑ +15%</small></strong>
-              <span>dari bulan lalu</span>
-              <div class="sparkline">⌁⌁⌁</div>
+            <div class="metric-card dashboard-summary-card">
+              <div class="metric-icon">♻</div>
+              <p>Estimasi Hemat Herbisida</p>
+              <strong id="dashboard-herbicide-savings" aria-live="polite">—</strong>
+              <span id="dashboard-herbicide-caption">Menunggu hasil pemindaian</span>
+              <small class="dashboard-summary-detail" id="dashboard-herbicide-detail">Baseline lahan: 240 m²</small>
             </div>
           </div>
 
-          <!-- QUICK MENU -->
-          <div class="quick-grid">
-            <button class="quick-card"><span><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polygon points="12 2 2 7 12 12 22 7 12 2" />
-                  <polyline points="2 12 12 17 22 12" />
-                  <polyline points="2 17 12 22 22 17" />
-                </svg></span><b>Zona Gulma</b></button>
-            <button class="quick-card"><span><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                </svg></span><b>Status Node</b></button>
-            <button class="quick-card"><span><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg></span><b>Posisi Node A &amp; B</b></button>
-            <button class="quick-card"><span><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path
-                    d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />
-                </svg></span><b>Volume Tangki</b></button>
-            <button class="quick-card"><span><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg></span><b>Log Histori</b></button>
-          </div>
-
-          <!-- NODE CARDS -->
+          <!-- Node cards -->
           <div class="node-grid">
-            <article class="node-card" id="node-1-card">
+            <article class="node-card node-status-card" id="node-1-card">
               <div class="node-header">
                 <h3><i></i>Node 1</h3>
-                <span class="status" id="node-1-status" style="transition:0.3s;">● SIAP BEROPERASI</span>
+                <span class="status node-status-badge online" id="node-1-status">● AKTIF</span>
               </div>
-
-              <div class="node-body">
-                <div class="node-info">
-                  <p><b>⌖</b> Posisi <strong>(2.0, 3.0)</strong> <span>(Stabil)</span></p>
-                  <p><b>☷</b> Urutan Kerja Saat Ini: <strong>Idle</strong></p>
-                  <p><b>✓</b> Tasks Selesai <strong>0 / 0</strong></p>
-                </div>
-                <div class="node-illustration">▣<small>⌁</small></div>
-              </div>
-
-              <div class="tank">
-                <div class="tank-title">
-                  <b>Sisa Akumulasi Cairan</b>
-                  <strong>85% (85L)</strong>
-                </div>
-                <div class="progress"><span style="width:85%"></span></div>
-                <div class="sensor">♧ &nbsp; Sensor Ultrasonik: &nbsp;15cm / 100cm</div>
-              </div>
-              <button class="node-toggle-btn" data-node="1"
-                style="width: 100%; border: none; padding: 10px; margin-top: 15px; border-radius: 8px; background: #fee; color: #d12e2e; font-weight: bold; cursor: pointer; transition: 0.2s;">Matikan
-                Hardware</button>
             </article>
 
-            <article class="node-card" id="node-2-card">
+            <article class="node-card node-status-card" id="node-2-card">
               <div class="node-header">
                 <h3><i></i>Node 2</h3>
-                <span class="status" id="node-2-status" style="transition:0.3s;">● SIAP BEROPERASI</span>
+                <span class="status node-status-badge online" id="node-2-status">● AKTIF</span>
               </div>
-
-              <div class="node-body">
-                <div class="node-info">
-                  <p><b>⌖</b> Posisi <strong>(15.0, 8.0)</strong> <span>(Stabil)</span></p>
-                  <p><b>☷</b> Urutan Kerja Saat Ini: <strong>Idle</strong></p>
-                  <p><b>✓</b> Tasks Selesai <strong>0 / 0</strong></p>
-                </div>
-                <div class="node-illustration">▣<small>⌁</small></div>
-              </div>
-
-              <div class="tank">
-                <div class="tank-title">
-                  <b>Sisa Akumulasi Cairan</b>
-                  <strong>60% (60L)</strong>
-                </div>
-                <div class="progress"><span style="width:60%"></span></div>
-                <div class="sensor">♧ &nbsp; Sensor Ultrasonik: &nbsp;40cm / 100cm</div>
-              </div>
-              <button class="node-toggle-btn" data-node="2"
-                style="width: 100%; border: none; padding: 10px; margin-top: 15px; border-radius: 8px; background: #fee; color: #d12e2e; font-weight: bold; cursor: pointer; transition: 0.2s;">Matikan
-                Hardware</button>
             </article>
           </div>
 
-          <!-- BOTTOM -->
+          <section class="dashboard-charts" aria-label="Grafik data operasional">
+            <article class="panel chart-card">
+              <div class="chart-heading">
+                <div>
+                  <span class="chart-eyebrow">HASIL PEMINDAIAN</span>
+                  <h3>Zona Gulma</h3>
+                </div>
+                <span class="chart-icon">▥</span>
+              </div>
+              <p class="chart-description">Perbandingan luas, kepadatan, dan skor prioritas tiap zona.</p>
+              <div id="dashboard-weed-chart" class="chart-content" aria-live="polite">
+                <p class="chart-empty">Belum ada zona gulma yang diproses.</p>
+              </div>
+            </article>
+
+            <article class="panel chart-card">
+              <div class="chart-heading">
+                <div>
+                  <span class="chart-eyebrow">KOORDINAT TERKINI</span>
+                  <h3>Posisi Node A &amp; B</h3>
+                </div>
+                <span class="chart-icon">⌖</span>
+              </div>
+              <p class="chart-description">Plot posisi dari data yang sudah dimasukkan.</p>
+              <div id="dashboard-position-chart" class="chart-content" aria-live="polite">
+                <p class="chart-empty">Belum ada data posisi node.</p>
+              </div>
+            </article>
+
+            <article class="panel chart-card">
+              <div class="chart-heading">
+                <div>
+                  <span class="chart-eyebrow">HASIL KALIBRASI SENSOR</span>
+                  <h3>Volume Tangki</h3>
+                </div>
+                <span class="chart-icon">◉</span>
+              </div>
+              <p class="chart-description">Sisa cairan berdasarkan pembacaan terakhir.</p>
+              <div id="dashboard-tank-chart" class="chart-content tank-chart-content" aria-live="polite">
+                <p class="chart-empty">Belum ada kalkulasi volume tangki.</p>
+              </div>
+            </article>
+          </section>
+          <div class="export-toolbar" data-export-container="dashboard" hidden>
+            <span>Unduh hasil dashboard:</span>
+            <button class="export-btn" type="button" data-export-scope="dashboard" data-export-format="pdf">PDF</button>
+            <button class="export-btn" type="button" data-export-scope="dashboard" data-export-format="docx">Word</button>
+            <button class="export-btn" type="button" data-export-scope="dashboard" data-export-format="xlsx">Excel</button>
+            <button class="export-btn" type="button" data-export-scope="dashboard" data-export-format="csv">Spreadsheet CSV</button>
+          </div>
+        </div>
+        <!-- End Dashboard -->
+
+
+        <!-- ================= ZONA GULMA ================= -->
+        <div id="view-zona-gulma" class="view" style="display: none;">
+
+          <!-- Input & Allocation Control + Load Balancing Metrics -->
           <div class="bottom-grid">
+
             <article class="panel allocation">
               <h3>🍃 &nbsp;Input &amp; Allocation Control</h3>
+
               <label>Add Weed Zone Manually</label>
               <div class="inputs">
                 <input id="xInput" type="number" placeholder="X (0-20)">
@@ -248,7 +266,7 @@
                 <input id="areaInput" type="number" placeholder="Area m²">
                 <input id="densityInput" type="number" placeholder="Density (t)">
               </div>
-              <button class="add-btn" id="addZoneBtn">＋ &nbsp; Add Zone to Tree</button>
+              <button class="add-btn" type="button" id="addZoneBtn">＋ &nbsp; Add Zone</button>
 
               <label>Bulk Import Zones (csv/JSON)</label>
               <div class="file-row">
@@ -261,32 +279,43 @@
             <article class="panel balancing">
               <div class="panel-title">
                 <h3>♟ &nbsp;Load Balancing Metrics</h3>
-                <span class="balanced">● BALANCED</span>
+                <span class="balanced" id="balance-badge">● BALANCED</span>
               </div>
 
               <div class="mini-metrics">
-                <div><span>✚</span><small>Jb (Mean Load)</small><strong>0.00</strong></div>
-                <div><span>♧</span><small>ab (Std Dev)</small><strong>0.00</strong></div>
-                <div><span>♜</span><small>CVb (Variance)</small><strong>0.00</strong></div>
+                <div>
+                  <span>✚</span>
+                  <small>μb (Mean Load)</small>
+                  <strong id="mu-value">0.00</strong>
+                </div>
+                <div>
+                  <span>♧</span>
+                  <small>σb (Std Dev)</small>
+                  <strong id="sigma-value">0.00</strong>
+                </div>
+                <div>
+                  <span>♜</span>
+                  <small>CVb (Coefficient of Variation)</small>
+                  <strong id="cv-value">0.00</strong>
+                </div>
               </div>
 
               <h4>System Log (Real-time Feedback)</h4>
               <div class="system-log">
                 <span>●</span>
-                <span>[12:31:29 AM] &nbsp;System initialized. Simulation engine ready.</span>
+                <div id="system-log">
+                  <div>[--:--:--] System initialized. Simulation engine ready.</div>
+                </div>
                 <b>● Live</b>
               </div>
             </article>
           </div>
-        </div> <!-- End Dashboard View -->
 
-        <!-- ZONA GULMA VIEW -->
-        <div id="view-zona-gulma" class="view" style="display: none;">
+          <!-- Dasbor Zona Gulma -->
           <div class="panel">
             <div class="panel-title">
-              <h3 style="display: flex; align-items: center; gap: 10px;">
-                <span class="metric-icon"
-                  style="width: 32px; height: 32px; font-size: 16px; margin: 0; background: #139446; color: white;">
+              <h3 class="page-title">
+                <span class="metric-icon page-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="12 2 2 7 12 12 22 7 12 2" />
@@ -298,12 +327,12 @@
               </h3>
               <span class="status">● REAL-TIME MONITORING</span>
             </div>
-            <p style="font-size: 13px; color: var(--muted); margin-bottom: 25px;">
+            <p class="page-desc space-lg">
               Daftar urutan kerja prioritas berdasarkan kalkulasi data kepadatan dan luas area gulma yang diproses
               sistem.
             </p>
 
-            <div class="table-container" style="overflow-x: auto;">
+            <div class="table-container">
               <table class="zg-table">
                 <thead>
                   <tr>
@@ -317,22 +346,32 @@
                 </thead>
                 <tbody id="zonesTableBody">
                   <tr>
-                    <td colspan="6" class="empty-state">Belum ada area zona gulma yang tercatat. Import CSV/JSON atau
-                      tambahkan manual.</td>
+                    <td colspan="6" class="empty-state">
+                      Belum ada area zona gulma yang tercatat. Import CSV/JSON atau tambahkan manual.
+                    </td>
                   </tr>
                 </tbody>
               </table>
             </div>
+            <div class="export-toolbar" data-export-container="zona-gulma" hidden>
+              <span>Unduh hasil Zona Gulma:</span>
+              <button class="export-btn" type="button" data-export-scope="zona-gulma" data-export-format="pdf">PDF</button>
+              <button class="export-btn" type="button" data-export-scope="zona-gulma" data-export-format="docx">Word</button>
+              <button class="export-btn" type="button" data-export-scope="zona-gulma" data-export-format="xlsx">Excel</button>
+              <button class="export-btn" type="button" data-export-scope="zona-gulma" data-export-format="csv">Spreadsheet CSV</button>
+            </div>
           </div>
-        </div> <!-- End Zona Gulma View -->
+        </div>
+        <!-- End Zona Gulma -->
 
-        <!-- STATUS NODE VIEW -->
+
+        <!-- ================= STATUS NODE ================= -->
         <div id="view-status-node" class="view" style="display: none;">
-          <div class="panel" style="margin-bottom: 20px;">
+
+          <div class="panel page-head">
             <div class="panel-title">
-              <h3 style="display: flex; align-items: center; gap: 10px;">
-                <span class="metric-icon"
-                  style="width: 32px; height: 32px; font-size: 16px; margin: 0; background: #139446; color: white;">
+              <h3 class="page-title">
+                <span class="metric-icon page-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
@@ -342,13 +381,14 @@
               </h3>
               <span class="status">● MONITORING AKTIF</span>
             </div>
-            <p style="font-size: 13px; color: var(--muted); margin-bottom: 10px;">
+            <p class="page-desc">
               Pantau kondisi hardware setiap node dan kontrol operasinya secara langsung.
             </p>
           </div>
 
           <div class="node-grid">
-            <!-- NODE 1 STATUS CARD -->
+
+            <!-- Node 1 -->
             <article class="panel sn-card" id="sn-node-1">
               <div class="sn-header">
                 <div class="sn-indicator online" id="sn-indicator-1"></div>
@@ -356,7 +396,7 @@
                   <h3>Node 1</h3>
                   <span class="sn-subtitle" id="sn-label-1">Hardware Aktif</span>
                 </div>
-                <span class="status" id="sn-badge-1" style="margin-left: auto;">● SIAP BEROPERASI</span>
+                <span class="status" id="sn-badge-1">● SIAP BEROPERASI</span>
               </div>
 
               <div class="sn-details">
@@ -387,7 +427,7 @@
               </div>
             </article>
 
-            <!-- NODE 2 STATUS CARD -->
+            <!-- Node 2 -->
             <article class="panel sn-card" id="sn-node-2">
               <div class="sn-header">
                 <div class="sn-indicator online" id="sn-indicator-2"></div>
@@ -395,7 +435,7 @@
                   <h3>Node 2</h3>
                   <span class="sn-subtitle" id="sn-label-2">Hardware Aktif</span>
                 </div>
-                <span class="status" id="sn-badge-2" style="margin-left: auto;">● SIAP BEROPERASI</span>
+                <span class="status" id="sn-badge-2">● SIAP BEROPERASI</span>
               </div>
 
               <div class="sn-details">
@@ -426,15 +466,17 @@
               </div>
             </article>
           </div>
-        </div> <!-- End Status Node View -->
+        </div>
+        <!-- End Status Node -->
 
-        <!-- POSISI NODE A & B VIEW -->
+
+        <!-- ================= POSISI NODE A & B ================= -->
         <div id="view-posisi-node" class="view" style="display: none;">
-          <div class="panel" style="margin-bottom: 20px;">
+
+          <div class="panel page-head">
             <div class="panel-title">
-              <h3 style="display: flex; align-items: center; gap: 10px;">
-                <span class="metric-icon"
-                  style="width: 32px; height: 32px; font-size: 16px; margin: 0; background: #139446; color: white;">
+              <h3 class="page-title">
+                <span class="metric-icon page-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
@@ -445,21 +487,22 @@
               </h3>
               <span class="status">● MONITORING POSISI</span>
             </div>
-            <p style="font-size: 13px; color: var(--muted); margin-bottom: 10px;">
+            <p class="page-desc">
               Masukkan posisi terbaru tiap node. Sistem akan membandingkan dengan posisi sebelumnya
               untuk menentukan apakah node sudah berada di titik yang stabil.
             </p>
           </div>
 
           <div class="pn-grid">
-            <!-- NODE A -->
+
+            <!-- Node A -->
             <article class="panel pn-card" id="pn-node-A">
               <h3>📍 Node A</h3>
 
               <div class="pn-inputs">
                 <input id="pnA-x" type="number" placeholder="X">
                 <input id="pnA-y" type="number" placeholder="Y">
-                <button id="pnA-submit" class="add-btn">Update Posisi</button>
+                <button id="pnA-submit" class="add-btn" type="button">Update Posisi</button>
               </div>
 
               <div class="pn-result">
@@ -470,14 +513,14 @@
               </div>
             </article>
 
-            <!-- NODE B -->
+            <!-- Node B -->
             <article class="panel pn-card" id="pn-node-B">
               <h3>📍 Node B</h3>
 
               <div class="pn-inputs">
                 <input id="pnB-x" type="number" placeholder="X">
                 <input id="pnB-y" type="number" placeholder="Y">
-                <button id="pnB-submit" class="add-btn">Update Posisi</button>
+                <button id="pnB-submit" class="add-btn" type="button">Update Posisi</button>
               </div>
 
               <div class="pn-result">
@@ -488,15 +531,24 @@
               </div>
             </article>
           </div>
-        </div> <!-- End Posisi Node View -->
+          <div class="export-toolbar" data-export-container="posisi-node" hidden>
+            <span>Unduh hasil Posisi Node:</span>
+            <button class="export-btn" type="button" data-export-scope="posisi-node" data-export-format="pdf">PDF</button>
+            <button class="export-btn" type="button" data-export-scope="posisi-node" data-export-format="docx">Word</button>
+            <button class="export-btn" type="button" data-export-scope="posisi-node" data-export-format="xlsx">Excel</button>
+            <button class="export-btn" type="button" data-export-scope="posisi-node" data-export-format="csv">Spreadsheet CSV</button>
+          </div>
+        </div>
+        <!-- End Posisi Node -->
 
-        <!-- VOLUME TANGKI VIEW -->
+
+        <!-- ================= VOLUME TANGKI ================= -->
         <div id="view-volume-tangki" class="view" style="display: none;">
-          <div class="panel" style="margin-bottom: 20px;">
+
+          <div class="panel page-head">
             <div class="panel-title">
-              <h3 style="display: flex; align-items: center; gap: 10px;">
-                <span class="metric-icon"
-                  style="width: 32px; height: 32px; font-size: 16px; margin: 0; background: #139446; color: white;">
+              <h3 class="page-title">
+                <span class="metric-icon page-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path
@@ -507,92 +559,101 @@
               </h3>
               <span class="status">● MONITORING VOLUME</span>
             </div>
-            <p style="font-size: 13px; color: var(--muted); margin-bottom: 10px;">
+            <p class="page-desc">
               Sensor ultrasonik mengukur jarak permukaan air ke atas tangki (cm). Sistem mengkalibrasi
               jarak tersebut menjadi volume (liter) dan persentase sisa cairan herbisida.
             </p>
           </div>
 
           <div class="vt-grid">
-            <!-- TANGKI NODE 1 -->
+
+            <!-- Tangki Node 1 -->
             <article class="panel vt-card" id="vt-node-1">
               <h3>💧 Tangki Node 1</h3>
 
               <div class="vt-inputs">
                 <div class="vt-field">
-                  <label>Tinggi Tangki (cm)</label>
+                  <label for="vt-height-1">Tinggi Tangki (cm)</label>
                   <input id="vt-height-1" type="number" value="100">
                 </div>
                 <div class="vt-field">
-                  <label>Kapasitas (Liter)</label>
+                  <label for="vt-capacity-1">Kapasitas (Liter)</label>
                   <input id="vt-capacity-1" type="number" value="100">
                 </div>
                 <div class="vt-field">
-                  <label>Jarak Sensor (cm)</label>
+                  <label for="vt-distance-1">Jarak Sensor (cm)</label>
                   <input id="vt-distance-1" type="number" placeholder="Contoh: 15">
                 </div>
               </div>
-              <button id="vt-submit-1" class="add-btn" style="width:100%; margin-top:10px;">Kalkulasi Volume</button>
+              <button id="vt-submit-1" class="add-btn" type="button">Kalkulasi Volume</button>
 
-              <div class="tank" style="margin-top:16px;">
+              <div class="tank">
                 <div class="tank-title">
                   <b>Sisa Akumulasi Cairan</b>
                   <strong id="vt-percent-label-1">- % (- L)</strong>
                 </div>
                 <div class="progress"><span id="vt-bar-1" style="width:0%"></span></div>
-                <div class="sensor">♧ &nbsp; Sensor Ultrasonik: &nbsp;<span id="vt-distance-label-1">-</span>cm /
+                <div class="sensor">
+                  ♧ &nbsp; Sensor Ultrasonik: &nbsp;<span id="vt-distance-label-1">-</span>cm /
                   <span id="vt-height-label-1">100</span>cm
                 </div>
               </div>
 
-              <p style="margin-top:10px;">Status: <span class="pn-badge pending" id="vt-status-1">Menunggu Data</span>
-              </p>
+              <p class="vt-status-row">Status: <span class="pn-badge pending" id="vt-status-1">Menunggu Data</span></p>
             </article>
 
-            <!-- TANGKI NODE 2 -->
+            <!-- Tangki Node 2 -->
             <article class="panel vt-card" id="vt-node-2">
               <h3>💧 Tangki Node 2</h3>
 
               <div class="vt-inputs">
                 <div class="vt-field">
-                  <label>Tinggi Tangki (cm)</label>
+                  <label for="vt-height-2">Tinggi Tangki (cm)</label>
                   <input id="vt-height-2" type="number" value="100">
                 </div>
                 <div class="vt-field">
-                  <label>Kapasitas (Liter)</label>
+                  <label for="vt-capacity-2">Kapasitas (Liter)</label>
                   <input id="vt-capacity-2" type="number" value="100">
                 </div>
                 <div class="vt-field">
-                  <label>Jarak Sensor (cm)</label>
+                  <label for="vt-distance-2">Jarak Sensor (cm)</label>
                   <input id="vt-distance-2" type="number" placeholder="Contoh: 40">
                 </div>
               </div>
-              <button id="vt-submit-2" class="add-btn" style="width:100%; margin-top:10px;">Kalkulasi Volume</button>
+              <button id="vt-submit-2" class="add-btn" type="button">Kalkulasi Volume</button>
 
-              <div class="tank" style="margin-top:16px;">
+              <div class="tank">
                 <div class="tank-title">
                   <b>Sisa Akumulasi Cairan</b>
                   <strong id="vt-percent-label-2">- % (- L)</strong>
                 </div>
                 <div class="progress"><span id="vt-bar-2" style="width:0%"></span></div>
-                <div class="sensor">♧ &nbsp; Sensor Ultrasonik: &nbsp;<span id="vt-distance-label-2">-</span>cm /
+                <div class="sensor">
+                  ♧ &nbsp; Sensor Ultrasonik: &nbsp;<span id="vt-distance-label-2">-</span>cm /
                   <span id="vt-height-label-2">100</span>cm
                 </div>
               </div>
 
-              <p style="margin-top:10px;">Status: <span class="pn-badge pending" id="vt-status-2">Menunggu Data</span>
-              </p>
+              <p class="vt-status-row">Status: <span class="pn-badge pending" id="vt-status-2">Menunggu Data</span></p>
             </article>
           </div>
-        </div> <!-- End Volume Tangki View -->
+          <div class="export-toolbar" data-export-container="volume-tangki" hidden>
+            <span>Unduh hasil Volume Tangki:</span>
+            <button class="export-btn" type="button" data-export-scope="volume-tangki" data-export-format="pdf">PDF</button>
+            <button class="export-btn" type="button" data-export-scope="volume-tangki" data-export-format="docx">Word</button>
+            <button class="export-btn" type="button" data-export-scope="volume-tangki" data-export-format="xlsx">Excel</button>
+            <button class="export-btn" type="button" data-export-scope="volume-tangki" data-export-format="csv">Spreadsheet CSV</button>
+          </div>
+        </div>
+        <!-- End Volume Tangki -->
 
-        <!-- LOG HISTORI VIEW -->
+
+        <!-- ================= LOG HISTORI ================= -->
         <div id="view-log-histori" class="view" style="display: none;">
           <div class="panel">
             <div class="panel-title">
-              <h3 style="display: flex; align-items: center; gap: 10px;">
-                <span class="metric-icon"
-                  style="width: 32px; height: 32px; font-size: 16px; margin: 0; background: #139446; color: white;">
+              <h3 class="page-title">
+                <span class="metric-icon page-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10" />
@@ -603,30 +664,31 @@
               </h3>
               <span class="status">● SEMUA MODUL</span>
             </div>
-            <p style="font-size: 13px; color: var(--muted); margin-bottom: 15px;">
+            <p class="page-desc space-md">
               Rekaman semua data yang sudah terbaca secara realtime dari setiap modul: Zona Gulma,
               Status Node, Posisi Node A &amp; B, dan Volume Tangki.
             </p>
 
             <div class="lh-tabs">
-              <button class="lh-tab active" data-lh-filter="all">Semua</button>
-              <button class="lh-tab" data-lh-filter="zona-gulma">Zona Gulma</button>
-              <button class="lh-tab" data-lh-filter="status-node">Status Node</button>
-              <button class="lh-tab" data-lh-filter="posisi-node">Posisi Node A&amp;B</button>
-              <button class="lh-tab" data-lh-filter="volume-tangki">Volume Tangki</button>
+              <button class="lh-tab active" type="button" data-lh-filter="all">Semua</button>
+              <button class="lh-tab" type="button" data-lh-filter="zona-gulma">Zona Gulma</button>
+              <button class="lh-tab" type="button" data-lh-filter="status-node">Status Node</button>
+              <button class="lh-tab" type="button" data-lh-filter="posisi-node">Posisi Node A&amp;B</button>
+              <button class="lh-tab" type="button" data-lh-filter="volume-tangki">Volume Tangki</button>
             </div>
 
             <div class="lh-list" id="lh-list">
               <div class="lh-empty">Belum ada aktivitas tercatat.</div>
             </div>
           </div>
-        </div> <!-- End Log Histori View -->
+        </div>
+        <!-- End Log Histori -->
 
       </section>
     </main>
   </div>
 
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 
 </html>
